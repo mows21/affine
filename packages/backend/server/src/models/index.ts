@@ -8,6 +8,7 @@ import { ModuleRef } from '@nestjs/core';
 
 import { ApplyType } from '../base';
 import { AccessTokenModel } from './access-token';
+import { AutomationModel } from './automation';
 import { BlobModel } from './blob';
 import { CommentModel } from './comment';
 import { CommentAttachmentModel } from './comment-attachment';
@@ -20,6 +21,7 @@ import { DocModel } from './doc';
 import { DocUserModel } from './doc-user';
 import { FeatureModel } from './feature';
 import { HistoryModel } from './history';
+import { IntegrationModel } from './integration';
 import { NotificationModel } from './notification';
 import { MODELS_SYMBOL } from './provider';
 import { SessionModel } from './session';
@@ -28,6 +30,7 @@ import { UserDocModel } from './user-doc';
 import { UserFeatureModel } from './user-feature';
 import { UserSettingsModel } from './user-settings';
 import { VerificationTokenModel } from './verification-token';
+import { WebhookModel } from './webhook';
 import { WorkspaceModel } from './workspace';
 import { WorkspaceFeatureModel } from './workspace-feature';
 import { WorkspaceUserModel } from './workspace-user';
@@ -56,6 +59,10 @@ const MODELS = {
   commentAttachment: CommentAttachmentModel,
   blob: BlobModel,
   accessToken: AccessTokenModel,
+  // Automation & Integrations
+  webhook: WebhookModel,
+  integration: IntegrationModel,
+  automation: AutomationModel,
 };
 
 type ModelsType = {
@@ -107,6 +114,7 @@ const ModelsSymbolProvider: ExistingProvider = {
 })
 export class ModelsModule {}
 
+export * from './automation';
 export * from './blob';
 export * from './comment';
 export * from './comment-attachment';
@@ -119,6 +127,7 @@ export * from './doc';
 export * from './doc-user';
 export * from './feature';
 export * from './history';
+export * from './integration';
 export * from './notification';
 export * from './session';
 export * from './user';
@@ -126,6 +135,7 @@ export * from './user-doc';
 export * from './user-feature';
 export * from './user-settings';
 export * from './verification-token';
+export * from './webhook';
 export * from './workspace';
 export * from './workspace-feature';
 export * from './workspace-user';
