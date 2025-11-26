@@ -54,6 +54,7 @@ import { CaptchaModule } from './plugins/captcha';
 import { CopilotModule } from './plugins/copilot';
 import { CustomerIoModule } from './plugins/customerio';
 import { GCloudModule } from './plugins/gcloud';
+import { GitHubModule } from './plugins/github';
 import { IndexerModule } from './plugins/indexer';
 import { LicenseModule } from './plugins/license';
 import { OAuthModule } from './plugins/oauth';
@@ -191,7 +192,8 @@ export function buildAppModule(env: Env) {
       CustomerIoModule,
       CommentModule,
       AccessTokenModule,
-      AutomationModule
+      AutomationModule,
+      GitHubModule
     )
     // doc service only
     .useIf(() => env.flavors.doc, DocServiceModule)

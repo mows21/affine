@@ -199,4 +199,237 @@ export class AutomationEventHandlers {
   }
 
   // #endregion
+
+  // #region GitHub Events
+
+  @OnEvent('github.issue.created')
+  async onGitHubIssueCreated(payload: {
+    workspaceId: string;
+    repository: string;
+    issue: {
+      id: number;
+      number: number;
+      title: string;
+      body?: string;
+      state: string;
+      author: string;
+      labels: string[];
+      url: string;
+    };
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_issue_created,
+      {
+        repository: payload.repository,
+        issue: payload.issue,
+      }
+    );
+  }
+
+  @OnEvent('github.issue.updated')
+  async onGitHubIssueUpdated(payload: {
+    workspaceId: string;
+    repository: string;
+    issue: {
+      id: number;
+      number: number;
+      title: string;
+      body?: string;
+      state: string;
+      author: string;
+      labels: string[];
+      url: string;
+    };
+    changes?: Record<string, any>;
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_issue_updated,
+      {
+        repository: payload.repository,
+        issue: payload.issue,
+        changes: payload.changes,
+      }
+    );
+  }
+
+  @OnEvent('github.issue.closed')
+  async onGitHubIssueClosed(payload: {
+    workspaceId: string;
+    repository: string;
+    issue: {
+      id: number;
+      number: number;
+      title: string;
+      state: string;
+      author: string;
+      closedBy?: string;
+      url: string;
+    };
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_issue_closed,
+      {
+        repository: payload.repository,
+        issue: payload.issue,
+      }
+    );
+  }
+
+  @OnEvent('github.pr.created')
+  async onGitHubPRCreated(payload: {
+    workspaceId: string;
+    repository: string;
+    pullRequest: {
+      id: number;
+      number: number;
+      title: string;
+      body?: string;
+      state: string;
+      author: string;
+      headBranch: string;
+      baseBranch: string;
+      draft: boolean;
+      url: string;
+    };
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_pr_created,
+      {
+        repository: payload.repository,
+        pullRequest: payload.pullRequest,
+      }
+    );
+  }
+
+  @OnEvent('github.pr.merged')
+  async onGitHubPRMerged(payload: {
+    workspaceId: string;
+    repository: string;
+    pullRequest: {
+      id: number;
+      number: number;
+      title: string;
+      author: string;
+      mergedBy: string;
+      headBranch: string;
+      baseBranch: string;
+      url: string;
+    };
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_pr_merged,
+      {
+        repository: payload.repository,
+        pullRequest: payload.pullRequest,
+      }
+    );
+  }
+
+  @OnEvent('github.pr.closed')
+  async onGitHubPRClosed(payload: {
+    workspaceId: string;
+    repository: string;
+    pullRequest: {
+      id: number;
+      number: number;
+      title: string;
+      state: string;
+      author: string;
+      closedBy?: string;
+      merged: boolean;
+      url: string;
+    };
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_pr_closed,
+      {
+        repository: payload.repository,
+        pullRequest: payload.pullRequest,
+      }
+    );
+  }
+
+  @OnEvent('github.push')
+  async onGitHubPush(payload: {
+    workspaceId: string;
+    repository: string;
+    ref: string;
+    commits: Array<{
+      id: string;
+      message: string;
+      author: string;
+      url: string;
+    }>;
+    pusher: string;
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_push,
+      {
+        repository: payload.repository,
+        ref: payload.ref,
+        commits: payload.commits,
+        pusher: payload.pusher,
+      }
+    );
+  }
+
+  @OnEvent('github.release')
+  async onGitHubRelease(payload: {
+    workspaceId: string;
+    repository: string;
+    release: {
+      id: number;
+      tagName: string;
+      name: string;
+      body?: string;
+      draft: boolean;
+      prerelease: boolean;
+      author: string;
+      url: string;
+    };
+    action: 'published' | 'created' | 'edited' | 'deleted';
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_release,
+      {
+        repository: payload.repository,
+        release: payload.release,
+        action: payload.action,
+      }
+    );
+  }
+
+  @OnEvent('github.workflow.completed')
+  async onGitHubWorkflowCompleted(payload: {
+    workspaceId: string;
+    repository: string;
+    workflow: {
+      id: number;
+      name: string;
+      conclusion: string;
+      status: string;
+      url: string;
+    };
+    branch: string;
+  }) {
+    await this.triggerAutomation(
+      payload.workspaceId,
+      WebhookEventType.github_workflow_completed,
+      {
+        repository: payload.repository,
+        workflow: payload.workflow,
+        branch: payload.branch,
+      }
+    );
+  }
+
+  // #endregion
 }

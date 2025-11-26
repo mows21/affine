@@ -1019,6 +1019,16 @@ enum WebhookEventType {
   // Blob events
   blob_uploaded
   blob_deleted
+  // GitHub events
+  github_issue_created
+  github_issue_updated
+  github_issue_closed
+  github_pr_created
+  github_pr_merged
+  github_pr_closed
+  github_push
+  github_release
+  github_workflow_completed
   // Custom/all events
   all_events
 }
