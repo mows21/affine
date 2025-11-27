@@ -986,3 +986,272 @@ model AccessToken {
   @@index([userId])
   @@map("access_tokens")
 }
+
+// ============================================================================
+// Webhooks & Integrations - Automation Powerhouse
+// ============================================================================
+
+enum WebhookEventType {
+  // Document events
+  doc_created
+  doc_updated
+  doc_deleted
+  doc_shared
+  doc_unshared
+  // Workspace events
+  workspace_created
+  workspace_updated
+  workspace_deleted
+  workspace_member_added
+  workspace_member_removed
+  workspace_member_role_changed
+  // Comment events
+  comment_created
+  comment_updated
+  comment_deleted
+  comment_resolved
+  // User events
+  user_invited
+  user_joined
+  // AI/Copilot events
+  ai_session_created
+  ai_session_completed
+  // Blob events
+  blob_uploaded
+  blob_deleted
+  // GitHub events
+  github_issue_created
+  github_issue_updated
+  github_issue_closed
+  github_pr_created
+  github_pr_merged
+  github_pr_closed
+  github_push
+  github_release
+  github_workflow_completed
+  // Custom/all events
+  all_events
+}
+
+enum WebhookStatus {
+  active
+  paused
+  disabled
+  failed
+}
+
+model WebhookEndpoint {
+  id           String        @id @default(uuid()) @db.VarChar
+  workspaceId  String        @map("workspace_id") @db.VarChar
+  name         String        @db.VarChar
+  url          String        @db.Text
+  // Secret for HMAC signature verification
+  secret       String        @db.VarChar
+  // Events this webhook subscribes to
+  events       WebhookEventType[]
+  status       WebhookStatus @default(active)
+  // Optional headers to include in requests (JSON)
+  headers      Json?         @db.JsonB
+  // Retry configuration
+  maxRetries   Int           @default(3) @map("max_retries") @db.SmallInt
+  retryDelayMs Int           @default(1000) @map("retry_delay_ms") @db.Integer
+  // Rate limiting
+  rateLimitPerMinute Int     @default(60) @map("rate_limit_per_minute") @db.SmallInt
+  // Metadata
+  description  String?       @db.Text
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy    String?       @map("created_by") @db.VarChar
+  // Stats
+  lastTriggeredAt DateTime?  @map("last_triggered_at") @db.Timestamptz(3)
+  successCount    Int        @default(0) @map("success_count") @db.Integer
+  failureCount    Int        @default(0) @map("failure_count") @db.Integer
+
+  deliveries WebhookDelivery[]
+
+  @@index([workspaceId])
+  @@index([status])
+  @@map("webhook_endpoints")
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  success
+  failed
+  retrying
+}
+
+model WebhookDelivery {
+  id           String                @id @default(uuid()) @db.VarChar
+  webhookId    String                @map("webhook_id") @db.VarChar
+  event        WebhookEventType
+  // The payload sent to the webhook
+  payload      Json                  @db.JsonB
+  status       WebhookDeliveryStatus @default(pending)
+  // HTTP response details
+  statusCode   Int?                  @map("status_code") @db.SmallInt
+  responseBody String?               @map("response_body") @db.Text
+  errorMessage String?               @map("error_message") @db.Text
+  // Retry tracking
+  attempts     Int                   @default(0) @db.SmallInt
+  nextRetryAt  DateTime?             @map("next_retry_at") @db.Timestamptz(3)
+  // Timing
+  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt  DateTime?             @map("completed_at") @db.Timestamptz(3)
+  durationMs   Int?                  @map("duration_ms") @db.Integer
+
+  webhook WebhookEndpoint @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId, createdAt])
+  @@index([status, nextRetryAt])
+  @@map("webhook_deliveries")
+}
+
+// Integration providers (Slack, Discord, etc.)
+enum IntegrationType {
+  slack
+  discord
+  zapier
+  n8n
+  make
+  github
+  linear
+  notion
+  custom_webhook
+}
+
+enum IntegrationStatus {
+  active
+  disconnected
+  error
+  pending_setup
+}
+
+model Integration {
+  id           String            @id @default(uuid()) @db.VarChar
+  workspaceId  String            @map("workspace_id") @db.VarChar
+  type         IntegrationType
+  name         String            @db.VarChar
+  status       IntegrationStatus @default(pending_setup)
+  // OAuth tokens and credentials (encrypted)
+  credentials  Json?             @db.JsonB
+  // Integration-specific configuration
+  config       Json?             @db.JsonB
+  // Events this integration handles
+  events       WebhookEventType[]
+  // Metadata
+  description  String?           @db.Text
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy    String?           @map("created_by") @db.VarChar
+  lastSyncAt   DateTime?         @map("last_sync_at") @db.Timestamptz(3)
+  errorMessage String?           @map("error_message") @db.Text
+
+  @@unique([workspaceId, type, name])
+  @@index([workspaceId])
+  @@index([type])
+  @@map("integrations")
+}
+
+// Automation rules for trigger-action workflows
+enum AutomationTriggerType {
+  event           // Triggered by workspace events
+  schedule        // Cron-based triggers
+  webhook_inbound // Triggered by incoming webhooks
+  manual          // Manually triggered
+}
+
+enum AutomationStatus {
+  active
+  paused
+  draft
+  error
+}
+
+model Automation {
+  id           String               @id @default(uuid()) @db.VarChar
+  workspaceId  String               @map("workspace_id") @db.VarChar
+  name         String               @db.VarChar
+  description  String?              @db.Text
+  status       AutomationStatus     @default(draft)
+  // Trigger configuration
+  triggerType  AutomationTriggerType @map("trigger_type")
+  triggerConfig Json                @map("trigger_config") @db.JsonB
+  // Actions to execute (array of action definitions)
+  actions      Json                 @db.JsonB
+  // Conditions/filters for when to execute
+  conditions   Json?                @db.JsonB
+  // Execution settings
+  maxExecutionsPerHour Int          @default(100) @map("max_executions_per_hour") @db.SmallInt
+  timeoutMs    Int                  @default(30000) @map("timeout_ms") @db.Integer
+  // Metadata
+  createdAt    DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy    String?              @map("created_by") @db.VarChar
+  // Stats
+  lastRunAt    DateTime?            @map("last_run_at") @db.Timestamptz(3)
+  runCount     Int                  @default(0) @map("run_count") @db.Integer
+  errorCount   Int                  @default(0) @map("error_count") @db.Integer
+
+  executions AutomationExecution[]
+
+  @@index([workspaceId])
+  @@index([status])
+  @@map("automations")
+}
+
+enum AutomationExecutionStatus {
+  pending
+  running
+  completed
+  failed
+  cancelled
+}
+
+model AutomationExecution {
+  id           String                    @id @default(uuid()) @db.VarChar
+  automationId String                    @map("automation_id") @db.VarChar
+  status       AutomationExecutionStatus @default(pending)
+  // Input that triggered the execution
+  triggerData  Json                      @map("trigger_data") @db.JsonB
+  // Execution results for each action
+  results      Json?                     @db.JsonB
+  errorMessage String?                   @map("error_message") @db.Text
+  // Timing
+  startedAt    DateTime                  @default(now()) @map("started_at") @db.Timestamptz(3)
+  completedAt  DateTime?                 @map("completed_at") @db.Timestamptz(3)
+  durationMs   Int?                      @map("duration_ms") @db.Integer
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId, startedAt])
+  @@index([status])
+  @@map("automation_executions")
+}
+
+// Inbound webhooks for receiving external triggers
+model InboundWebhook {
+  id           String   @id @default(uuid()) @db.VarChar
+  workspaceId  String   @map("workspace_id") @db.VarChar
+  name         String   @db.VarChar
+  // Unique token for the webhook URL
+  token        String   @unique @db.VarChar
+  // Secret for signature verification
+  secret       String?  @db.VarChar
+  // Whether the webhook is active
+  enabled      Boolean  @default(true)
+  // Optional schema validation for incoming payloads
+  payloadSchema Json?   @map("payload_schema") @db.JsonB
+  // Metadata
+  description  String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdBy    String?  @map("created_by") @db.VarChar
+  // Stats
+  lastReceivedAt DateTime? @map("last_received_at") @db.Timestamptz(3)
+  requestCount   Int       @default(0) @map("request_count") @db.Integer
+
+  @@index([workspaceId])
+  @@index([token])
+  @@map("inbound_webhooks")
+}

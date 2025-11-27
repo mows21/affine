@@ -49,10 +49,12 @@ import { VersionModule } from './core/version';
 import { WorkspaceModule } from './core/workspaces';
 import { Env } from './env';
 import { ModelsModule } from './models';
+import { AutomationModule } from './plugins/automation';
 import { CaptchaModule } from './plugins/captcha';
 import { CopilotModule } from './plugins/copilot';
 import { CustomerIoModule } from './plugins/customerio';
 import { GCloudModule } from './plugins/gcloud';
+import { GitHubModule } from './plugins/github';
 import { IndexerModule } from './plugins/indexer';
 import { LicenseModule } from './plugins/license';
 import { OAuthModule } from './plugins/oauth';
@@ -189,7 +191,9 @@ export function buildAppModule(env: Env) {
       OAuthModule,
       CustomerIoModule,
       CommentModule,
-      AccessTokenModule
+      AccessTokenModule,
+      AutomationModule,
+      GitHubModule
     )
     // doc service only
     .useIf(() => env.flavors.doc, DocServiceModule)
